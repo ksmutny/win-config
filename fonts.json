@@ -1,0 +1,10 @@
+[
+    {
+        "font": "Cascadia Code",
+        "url": "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/CascadiaCode.zip"
+    },
+    {
+        "font": "Fira Code",
+        "url": "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/FiraCode.zip"
+    }
+]
