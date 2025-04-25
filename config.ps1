@@ -17,6 +17,10 @@ $configFiles = @{
         "Local" = "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
         "Backup" = ".\config\WindowsTerminal\settings.json"
     }
+    "TotalCommander" = @{
+        "Local" = "$env:APPDATA\GHISLER\wincmd.ini"
+        "Backup" = ".\config\TotalCommander\wincmd.ini"
+    }
 }
 
 function Backup-Configs {
