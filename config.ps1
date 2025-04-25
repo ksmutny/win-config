@@ -1,6 +1,7 @@
 param(
     [switch]$Backup,
-    [switch]$Restore
+    [switch]$Restore,
+    [string]$Config
 )
 
 $configFiles = @{
@@ -19,45 +20,73 @@ $configFiles = @{
 }
 
 function Backup-Configs {
-    Copy-Configs -From "Local" -To "Backup"
+    param (
+        [string]$ConfigName
+    )
+    Copy-Configs -From "Local" -To "Backup" -ConfigName $ConfigName
 }
 
 function Restore-Configs {
-    Copy-Configs -From "Backup" -To "Local"
+    param (
+        [string]$ConfigName
+    )
+    Copy-Configs -From "Backup" -To "Local" -ConfigName $ConfigName
 }
 
 function Copy-Configs {
     param (
         [string]$From,
-        [string]$To
+        [string]$To,
+        [string]$ConfigName
     )
 
-    foreach ($config in $configFiles.GetEnumerator()) {
+    $configsToProcess = @()
+
+    if ([string]::IsNullOrEmpty($ConfigName)) {
+        $configsToProcess = $configFiles.GetEnumerator()
+    } else {
+        if ($configFiles.ContainsKey($ConfigName)) {
+            $configsToProcess = @([PSCustomObject]@{
+                Key = $ConfigName
+                Value = $configFiles[$ConfigName]
+            })
+        } else {
+            Write-Host "Error: Config '$ConfigName' not found. Available configs: $($configFiles.Keys -join ', ')" -ForegroundColor Red
+            return
+        }
+    }
+
+    foreach ($config in $configsToProcess) {
         $sourcePath = $config.Value[$From]
         $destinationPath = $config.Value[$To]
 
         if (Test-Path $sourcePath) {
-            Write-Host "Copying $($config.Key) configuration..."
+            Write-Host "Copying $($config.Key) configuration:"
+            Write-Host "  from $sourcePath" -ForegroundColor DarkCyan
+            Write-Host "  to $destinationPath" -ForegroundColor Cyan
             Copy-Item -Path $sourcePath -Destination $destinationPath -Force
         } else {
-            Write-Host "Warning: $($config.Key) configuration not found at $sourcePath"
+            Write-Host "Warning: $($config.Key) configuration not found at $sourcePath" -ForegroundColor Yellow
         }
     }
-    Write-Host "Operation completed."
+    Write-Host "Operation completed." -ForegroundColor Green
 }
 
 function Show-Help {
-    Write-Host "Usage: config.ps1 [-Backup] [-Restore]"
+    Write-Host "Usage: config.ps1 [-Backup] [-Restore] [ConfigName]"
     Write-Host ""
     Write-Host "Options:"
-    Write-Host "  -Backup    Backup configuration files from local locations to the git repository"
-    Write-Host "  -Restore   Restore configuration files from the git repository to their local locations"
+    Write-Host "  -Backup              Backup configuration files from local locations to the git repository"
+    Write-Host "  -Restore             Restore configuration files from the git repository to their local locations"
+    Write-Host "  ConfigName           Optional. Specific configuration to backup/restore"
+    Write-Host ""
+    Write-Host "Available configs: $($configFiles.Keys -join ', ')"
 }
 
 if ($Backup) {
-    Backup-Configs
+    Backup-Configs -ConfigName $Config
 } elseif ($Restore) {
-    Restore-Configs
+    Restore-Configs -ConfigName $Config
 } else {
     Show-Help
 }
